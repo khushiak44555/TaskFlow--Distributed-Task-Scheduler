@@ -1,5 +1,5 @@
-import { Task } from '@prisma/client';
 import { logger } from '../utils/logger';
+import type { Task } from '@prisma/client';
 
 /**
  * Execute a task with timeout handling

@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Prometheus metrics endpoint
-app.get('/metrics', async (req, res) => {
+app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', metricsService.register.contentType);
   res.end(await metricsService.register.metrics());
 });
@@ -22,7 +22,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/system', systemRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'healthy', 
     service: 'monitoring',

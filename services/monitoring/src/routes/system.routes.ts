@@ -7,7 +7,7 @@ import { prisma } from '../utils/db';
 const router = Router();
 
 // Redis connection status
-router.get('/redis', async (req, res) => {
+router.get('/redis', async (_req, res) => {
   try {
     const redis = new IORedis({
       host: config.redis.host,
@@ -45,7 +45,7 @@ router.get('/redis', async (req, res) => {
 });
 
 // Database status
-router.get('/database', async (req, res) => {
+router.get('/database', async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     
@@ -72,7 +72,7 @@ router.get('/database', async (req, res) => {
 });
 
 // Queue status
-router.get('/queue', async (req, res) => {
+router.get('/queue', async (_req, res) => {
   try {
     const connection = new IORedis({
       host: config.redis.host,
@@ -126,7 +126,7 @@ router.get('/queue', async (req, res) => {
 });
 
 // System health check
-router.get('/health', async (req, res) => {
+router.get('/health', async (_req, res) => {
   try {
     // Check all services
     const [dbHealth, redisHealth] = await Promise.all([

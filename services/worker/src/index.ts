@@ -84,7 +84,7 @@ class WorkerService {
       });
 
       // Execute the task
-      const result = await executeTask(task, payload, job.opts.timeout || task.timeout);
+      const result = await executeTask(task, payload, (job.opts as any).timeout || task.timeout);
 
       // Update execution with success
       const duration = Date.now() - startTime;
@@ -219,7 +219,7 @@ class WorkerService {
     });
   }
 
-  private calculateNextRun(cronExpression: string): Date {
+  private calculateNextRun(_cronExpression: string): Date {
     // Simplified cron calculation - in production use a proper cron parser
     const now = new Date();
     return new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now

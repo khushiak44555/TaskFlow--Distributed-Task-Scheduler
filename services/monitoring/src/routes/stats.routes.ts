@@ -4,7 +4,7 @@ import { prisma } from '../utils/db';
 const router = Router();
 
 // Overall statistics
-router.get('/overview', async (req, res) => {
+router.get('/overview', async (_req, res) => {
   try {
     const [
       totalTasks,
@@ -42,7 +42,7 @@ router.get('/overview', async (req, res) => {
       executions: {
         total: totalExecutions,
         last24Hours: recentExecutions,
-        byStatus: executionStats.reduce((acc, stat) => {
+        byStatus: executionStats.reduce((acc: Record<string, number>, stat: any) => {
           acc[stat.status.toLowerCase()] = stat._count;
           return acc;
         }, {} as Record<string, number>)
@@ -56,7 +56,7 @@ router.get('/overview', async (req, res) => {
 });
 
 // Job execution trends
-router.get('/trends', async (req, res) => {
+router.get('/trends', async (_req, res) => {
   try {
     const { period = '7d' } = req.query;
     const days = period === '24h' ? 1 : period === '7d' ? 7 : 30;
@@ -85,7 +85,7 @@ router.get('/trends', async (req, res) => {
 });
 
 // Task type distribution
-router.get('/task-distribution', async (req, res) => {
+router.get('/task-distribution', async (_req, res) => {
   try {
     const distribution = await prisma.task.groupBy({
       by: ['type', 'status'],
@@ -100,7 +100,7 @@ router.get('/task-distribution', async (req, res) => {
 });
 
 // Average execution time
-router.get('/performance', async (req, res) => {
+router.get('/performance', async (_req, res) => {
   try {
     const avgDuration = await prisma.jobExecution.aggregate({
       where: {
@@ -126,7 +126,7 @@ router.get('/performance', async (req, res) => {
 });
 
 // Recent failures
-router.get('/recent-failures', async (req, res) => {
+router.get('/recent-failures', async (_req, res) => {
   try {
     const failures = await prisma.jobExecution.findMany({
       where: {
@@ -195,7 +195,7 @@ async function calculatePercentiles() {
     orderBy: { duration: 'asc' }
   });
 
-  const sorted = durations.map(d => d.duration!).sort((a, b) => a - b);
+  const sorted = durations.map((d: any) => d.duration!).sort((a: number, b: number) => a - b);
   
   return {
     p50: getPercentile(sorted, 50),

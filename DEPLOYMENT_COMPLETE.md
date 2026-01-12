@@ -164,9 +164,12 @@ git push -u origin main
 3. Settings:
    - Name: `taskflow-api`
    - Environment: `Node`
-   - Build Command: `cd services/api && npm install && npx prisma generate`
-   - Start Command: `cd services/api && npx tsx src/index.ts`
+   - **Root Directory**: `services/api`
+   - Build Command: `npm install && npx prisma generate`
+   - Start Command: `npx tsx src/index.ts`
    - Instance Type: Free
+
+**IMPORTANT:** Set Root Directory to `services/api` - this is critical!
 
 #### 4B.3 Add Environment Variables
 Same as Railway (Step 4.3)
@@ -174,9 +177,13 @@ Same as Railway (Step 4.3)
 #### 4B.4 Deploy Worker
 1. Create another Web Service
 2. Name: `taskflow-worker`
-3. Build Command: `npm install && cd services/worker && npm install`
-4. Start Command: `cd services/worker && npx tsx src/index.ts`
-5. Add environment variables
+3. **Root Directory**: `services/worker`
+4. Build Command: `npm install`
+5. Start Command: `npx tsx src/index.ts`
+6. Add environment variables (same as API)
+7. Instance Type: Free
+
+**IMPORTANT:** Set Root Directory to `services/worker`
 
 ---
 
@@ -241,9 +248,12 @@ Same as Railway (Step 4.3)
 
 **Note:** For Next.js on Render, you need a Web Service (not Static Site). Alternative config:
 - Service Type: Web Service
-- Build Command: `cd frontend && npm install && npm run build`
-- Start Command: `cd frontend && npm start`
+- **Root Directory**: `frontend`
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start`
 - Instance Type: Free
+
+**CRITICAL:** Always set the Root Directory field to the service folder. This prevents build errors.
 
 ---
 
@@ -326,28 +336,31 @@ Your TaskFlow is now deployed:
 ### Build Error: "Cannot find module 'autoprefixer'" (Render)
 **Problem:** Frontend build fails with missing autoprefixer or other dependencies.
 
-**Solution:**
-1. Make sure you're using the correct build command:
-   ```
-   cd frontend && npm install && npm run build
-   ```
-2. For Render Web Service, ensure Root Directory is set to `frontend`
-3. Or use this alternative if building from root:
-   ```
-   npm install --prefix frontend && cd frontend && npm run build
-   ```
-4. Verify `frontend/package.json` has all devDependencies:
-   - autoprefixer
-   - postcss
-   - tailwindcss
+**ROOT CAUSE:** Render is trying to build from the workspace root instead of the service directory.
 
-**Quick Fix:** Push updated `frontend/package.json` with engines specified:
-```json
-"engines": {
-  "node": ">=18.0.0",
-  "npm": ">=9.0.0"
-}
-```
+**Solution:**
+1. **Set Root Directory field in Render dashboard to the specific service folder:**
+   - For frontend: Set Root Directory to `frontend`
+   - For API: Set Root Directory to `services/api`
+   - For Worker: Set Root Directory to `services/worker`
+   - For Monitoring: Set Root Directory to `services/monitoring`
+
+2. **Then use simple commands:**
+   - Build Command: `npm install && npm run build`  
+   - Start Command: `npm start` (or `npx tsx src/index.ts` for services)
+
+3. **DO NOT use `cd` commands in build/start commands - use Root Directory instead!**
+
+**Why this matters:** Setting Root Directory tells Render to run commands from that folder, so it uses the correct package.json with all dependencies.
+
+### TypeScript Build Errors (Render)
+**Problem:** Build fails with TypeScript errors about missing types or unused variables.
+
+**Solution:**
+All TypeScript errors have been fixed in the latest commit. Make sure you:
+1. Push the latest changes to GitHub
+2. Trigger a redeploy on Render
+3. Check that Root Directory is set correctly for each service
 
 ### Module not found '@/lib/api' or '@/components/ui/card'
 **Problem:** TypeScript path aliases not resolving.
