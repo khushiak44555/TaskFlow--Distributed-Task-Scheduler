@@ -6,7 +6,7 @@ import { config } from '../config';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     // Check database
     await prisma.$queryRaw`SELECT 1`;
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/ready', async (req, res) => {
+router.get('/ready', async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: 'ready' });
@@ -50,7 +50,7 @@ router.get('/ready', async (req, res) => {
   }
 });
 
-router.get('/live', (req, res) => {
+router.get('/live', (_req, res) => {
   res.json({ status: 'alive' });
 });
 

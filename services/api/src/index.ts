@@ -55,8 +55,8 @@ serverAdapter.setBasePath('/admin/queues');
 
 createBullBoard({
   queues: [
-    new BullMQAdapter(queueService.taskQueue),
-    new BullMQAdapter(queueService.deadLetterQueue)
+    new BullMQAdapter(queueService.taskQueue) as any,
+    new BullMQAdapter(queueService.deadLetterQueue) as any
   ],
   serverAdapter
 });
@@ -64,7 +64,7 @@ createBullBoard({
 app.use('/admin/queues', serverAdapter.getRouter());
 
 // Prometheus metrics endpoint
-app.get('/metrics', async (req, res) => {
+app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', metricsService.register.contentType);
   res.end(await metricsService.register.metrics());
 });
@@ -76,7 +76,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/health', healthRoutes);
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 

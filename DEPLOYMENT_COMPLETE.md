@@ -164,7 +164,7 @@ git push -u origin main
 3. Settings:
    - Name: `taskflow-api`
    - Environment: `Node`
-   - Build Command: `npm install && cd services/api && npm install && npx prisma generate --schema=services/api/prisma/schema.prisma`
+   - Build Command: `cd services/api && npm install && npx prisma generate`
    - Start Command: `cd services/api && npx tsx src/index.ts`
    - Instance Type: Free
 
@@ -182,23 +182,25 @@ Same as Railway (Step 4.3)
 
 ## STEP 5: Deploy Frontend (Vercel) ⚡
 
-### 5.1 Create Vercel Account
+### Option A: Vercel (Recommended for Frontend)
+
+#### 5.1 Create Vercel Account
 1. Go to https://vercel.com
 2. Sign up with GitHub
 3. Authorize Vercel
 
-### 5.2 Import Project
+#### 5.2 Import Project
 1. Click "Add New..." → "Project"
 2. Import your `taskflow` GitHub repository
 3. Vercel auto-detects it's a Next.js app
 
-### 5.3 Configure Project
+#### 5.3 Configure Project
 1. Framework Preset: Next.js
 2. Root Directory: `frontend`
 3. Build Command: (leave default)
 4. Output Directory: (leave default)
 
-### 5.4 Add Environment Variable
+#### 5.4 Add Environment Variable
 1. Click "Environment Variables"
 2. Add:
    ```
@@ -206,10 +208,42 @@ Same as Railway (Step 4.3)
    ```
    (Use the URL from Step 4.5)
 
-### 5.5 Deploy
+#### 5.5 Deploy
 1. Click "Deploy"
 2. Wait 2-3 minutes
 3. You'll get a URL like `https://taskflow.vercel.app`
+
+---
+
+### Option B: Render (If Using Render for Everything)
+
+#### 5B.1 Create Static Site
+1. In Render dashboard, click "New" → "Static Site"
+2. Connect your GitHub repo
+3. Settings:
+   - Name: `taskflow-frontend`
+   - Branch: `main`
+   - Root Directory: `frontend`
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `.next`
+
+#### 5B.2 Add Environment Variables
+1. Click "Environment"
+2. Add:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-api-url.onrender.com
+   ```
+
+#### 5B.3 Deploy
+1. Click "Create Static Site"
+2. Wait 3-5 minutes
+3. You'll get a URL like `https://taskflow-frontend.onrender.com`
+
+**Note:** For Next.js on Render, you need a Web Service (not Static Site). Alternative config:
+- Service Type: Web Service
+- Build Command: `cd frontend && npm install && npm run build`
+- Start Command: `cd frontend && npm start`
+- Instance Type: Free
 
 ---
 
@@ -289,9 +323,49 @@ Your TaskFlow is now deployed:
 
 ## 🔧 Troubleshooting
 
+### Build Error: "Cannot find module 'autoprefixer'" (Render)
+**Problem:** Frontend build fails with missing autoprefixer or other dependencies.
+
+**Solution:**
+1. Make sure you're using the correct build command:
+   ```
+   cd frontend && npm install && npm run build
+   ```
+2. For Render Web Service, ensure Root Directory is set to `frontend`
+3. Or use this alternative if building from root:
+   ```
+   npm install --prefix frontend && cd frontend && npm run build
+   ```
+4. Verify `frontend/package.json` has all devDependencies:
+   - autoprefixer
+   - postcss
+   - tailwindcss
+
+**Quick Fix:** Push updated `frontend/package.json` with engines specified:
+```json
+"engines": {
+  "node": ">=18.0.0",
+  "npm": ">=9.0.0"
+}
+```
+
+### Module not found '@/lib/api' or '@/components/ui/card'
+**Problem:** TypeScript path aliases not resolving.
+
+**Solution:**
+1. Verify `frontend/tsconfig.json` has:
+   ```json
+   "paths": {
+     "@/*": ["./src/*"]
+   }
+   ```
+2. Check all files exist in `frontend/src/lib/` and `frontend/src/components/ui/`
+3. Ensure build command runs from `frontend` directory
+
 ### Frontend not loading?
 - Check environment variable `NEXT_PUBLIC_API_URL` is correct
-- Redeploy in Vercel
+- Redeploy in Vercel/Render
+- Check browser console for API connection errors
 
 ### Backend errors?
 - Check Railway logs
