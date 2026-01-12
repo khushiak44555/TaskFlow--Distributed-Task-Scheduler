@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum TaskStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRYING
+}
+
+enum TaskType {
+  ONE_TIME
+  RECURRING
+  DELAYED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tasks Task[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  type        TaskType
+  status      TaskStatus @default(ACTIVE)
+  
+  // Scheduling
+  cronExpression String?  // For recurring tasks
+  scheduledAt    DateTime? // For one-time/delayed tasks
+  priority       Int       @default(0) // Higher = more priority
+  
+  // Configuration
+  payload        Json?     // Job data
+  maxRetries     Int       @default(3)
+  timeout        Int       @default(30000) // milliseconds
+  rateLimit      Int?      // Max executions per minute
+  
+  // Metadata
+  createdBy   String
+  user        User       @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+
+  executions  JobExecution[]
+  deadLetters DeadLetterJob[]
+
+  @@index([status])
+  @@index([type])
+  @@index([createdBy])
+  @@index([nextRunAt])
+  @@map("tasks")
+}
+
+model JobExecution {
+  id         String    @id @default(uuid())
+  taskId     String
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  jobId      String    @unique // BullMQ job ID
+  status     JobStatus
+  
+  startedAt  DateTime?
+  completedAt DateTime?
+  duration   Int?      // milliseconds
+  
+  attempts   Int       @default(0)
+  result     Json?     // Success result
+  error      Json?     // Error details
+  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  retries    RetryHistory[]
+
+  @@index([taskId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("job_executions")
+}
+
+model RetryHistory {
+  id           String       @id @default(uuid())
+  executionId  String
+  execution    JobExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  
+  attemptNumber Int
+  error         Json
+  retriedAt     DateTime     @default(now())
+  
+  @@index([executionId])
+  @@map("retry_history")
+}
+
+model DeadLetterJob {
+  id         String   @id @default(uuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  jobId      String   @unique
+  payload    Json
+  error      Json
+  attempts   Int
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([taskId])
+  @@index([createdAt])
+  @@map("dead_letter_jobs")
+}

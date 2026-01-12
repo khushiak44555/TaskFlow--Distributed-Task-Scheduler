@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring
+  namespace: taskflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitoring
+  template:
+    metadata:
+      labels:
+        app: monitoring
+    spec:
+      containers:
+      - name: monitoring
+        image: taskflow/monitoring:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3002
+          name: http
+        envFrom:
+        - configMapRef:
+            name: taskflow-config
+        - secretRef:
+            name: taskflow-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring-service
+  namespace: taskflow
+spec:
+  selector:
+    app: monitoring
+  ports:
+  - port: 3002
+    targetPort: 3002
+    protocol: TCP
